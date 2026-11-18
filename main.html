@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101012">
+  <title>Zap Launcher</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101012;
+      --panel: #202023;
+      --panel-raised: #2b2b2f;
+      --panel-hover: #343438;
+      --line: #39393e;
+      --text: #f3f3f4;
+      --muted: #a0a0a5;
+      --blue: #20b8f3;
+      --sidebar-width: 236px;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; color: var(--text); background: var(--bg); font-size: 13px; }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .icon { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 3; width: var(--sidebar-width); padding: 24px 8px 18px; display: flex; flex-direction: column; background: #111113; }
+    .brand { width: 48px; height: 48px; margin: 0 auto 25px; overflow: hidden; border-radius: 2px; background: #090910; }
+    .brand-image { width: 100%; height: 100%; display: block; }
+    .side-nav { display: grid; gap: 4px; }
+    .nav-button { min-height: 52px; border: 0; border-radius: 6px; padding: 0 17px; display: flex; align-items: center; gap: 17px; color: #a8a8ad; background: transparent; text-align: left; cursor: pointer; }
+    .nav-button:hover { color: #fff; background: #202023; }
+    .nav-button.active { color: #fff; background: #303034; font-weight: 650; }
+    .side-caption { margin: 32px 12px 12px; color: #d3d3d5; font-size: 10px; font-weight: 750; letter-spacing: .35px; text-transform: uppercase; }
+    .quick-list { display: grid; gap: 5px; }
+    .quick-game { min-height: 52px; padding: 5px 12px; display: flex; align-items: center; gap: 11px; border: 0; border-radius: 5px; color: #ccc; background: transparent; text-align: left; cursor: pointer; }
+    .quick-game:hover { background: #202023; color: white; }
+    .quick-cover { position: relative; width: 30px; height: 38px; border-radius: 4px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(145deg,#36bde8,#2758a5 58%,#f3bf42); color: #fff; font-size: 8px; font-weight: 900; text-align: center; }
+    .quick-cover .poster-art { padding: 2px; }
+    .quick-cover .poster-kicker { display: none; }
+    .quick-cover .poster-title { font-size: 7px; line-height: 1; }
+    .quick-empty { padding: 0 13px; color: #85858b; font-size: 12px; line-height: 1.5; }
+    .sidebar-bottom { margin-top: auto; padding: 0 10px; color: #8e8e94; }
+    .status-dot { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: var(--blue); }
+    .main { min-height: 100vh; margin-left: var(--sidebar-width); padding: 24px 36px 48px 42px; }
+    .topbar { height: 42px; display: flex; align-items: center; gap: 17px; }
+    .back-button, .icon-button { width: 34px; height: 34px; border: 0; border-radius: 5px; display: grid; place-items: center; color: #b7b7bb; background: transparent; cursor: pointer; }
+    .back-button:hover, .icon-button:hover { color: white; background: var(--panel-raised); }
+    .search-wrap { width: min(390px, 42vw); height: 34px; padding: 0 12px; display: flex; align-items: center; gap: 9px; border: 1px solid #252529; border-radius: 18px; color: #929298; background: #202023; }
+    .search-wrap input { width: 100%; border: 0; outline: 0; color: var(--text); background: transparent; }
+    .search-wrap input::placeholder { color: #a3a3a8; }
+    .title-row { margin-top: 23px; display: flex; align-items: center; gap: 13px; }
+    h1 { margin: 0; font-size: 31px; font-weight: 800; letter-spacing: -.6px; }
+    .refresh { width: 30px; height: 30px; }
+    .tabs { margin-top: 35px; display: flex; align-items: center; gap: 25px; }
+    .tab { position: relative; min-height: 34px; border: 0; padding: 0 0 7px; color: #a7a7ac; background: transparent; font-weight: 600; cursor: pointer; }
+    .tab.active { color: #f5f5f6; }
+    .tab.active::after { position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--blue); content: ""; }
+    .add-tab { position: relative; width: 26px; height: 26px; border: 1.5px solid #eee; border-radius: 50%; padding: 0; color: white; background: transparent; cursor: pointer; }
+    .add-tab .icon { position: absolute; top: 50%; left: 50%; width: 14px; height: 14px; transform: translate(-50%, -50%); }
+    .add-tab:hover { color: #111; background: white; }
+    .library-layout { margin-top: 26px; display: grid; grid-template-columns: minmax(0, 1fr) 180px; align-items: start; gap: 20px; }
+    .library-tools { min-height: 32px; margin-bottom: 17px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .sort-control { display: flex; align-items: center; gap: 7px; color: #aaaab0; }
+    .sort-control select { max-width: 190px; border: 0; color: #dedee1; background: transparent; font-weight: 650; cursor: pointer; }
+    .sort-control option { background: #202023; }
+    .tool-actions { display: flex; align-items: center; gap: 4px; }
+    .view-button { width: 28px; height: 28px; border: 0; border-radius: 5px; display: grid; place-items: center; color: #a7a7ad; background: transparent; cursor: pointer; }
+    .view-button.active { color: var(--blue); background: #303034; }
+    .mobile-filter { display: none; }
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(166px, 184px)); gap: 24px 18px; align-items: start; }
+    .game-card { min-width: 0; position: relative; }
+    .poster-button { position: relative; width: 100%; aspect-ratio: 0.72; overflow: hidden; border: 0; border-radius: 4px; padding: 0; display: block; background: #22252b; cursor: pointer; }
+    .poster-art { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 17px 14px; background: radial-gradient(ellipse at 68% 32%,#74d7ec 0,transparent 36%), linear-gradient(150deg,#244c76,#17202d 57%,#d19c39); text-align: left; }
+    .poster-art::before { position: absolute; width: 150%; height: 54%; top: 21%; left: -20%; transform: rotate(-24deg); border: 2px solid rgb(255 255 255 / 27%); border-radius: 50%; content: ""; }
+    .poster-art::after { position: absolute; width: 72%; height: 34%; right: -24%; bottom: 13%; transform: rotate(28deg); background: linear-gradient(135deg,#29b9cf,#3a77a1 48%,#101820); clip-path: polygon(0 53%,18% 0,39% 23%,63% 2%,100% 40%,76% 57%,96% 100%,48% 77%,23% 100%); content: ""; }
+    .poster-kicker, .poster-title { position: relative; z-index: 1; text-shadow: 0 2px 8px #0009; }
+    .poster-kicker { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+    .poster-title { margin-top: auto; font-size: 24px; font-weight: 1000; line-height: .94; text-transform: uppercase; overflow-wrap: anywhere; }
+    .poster-image { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .game-meta { min-height: 43px; padding-top: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .game-name { min-width: 0; color: #f1f1f2; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+    .game-subtitle { margin-top: 7px; display: flex; align-items: center; gap: 5px; color: #a6a6ab; font-size: 11px; }
+    .launch-mark { width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 6px solid currentColor; }
+    .card-menu-wrap { position: relative; }
+    .card-menu-button { width: 26px; height: 25px; border: 0; border-radius: 4px; display: grid; place-items: center; color: #c4c4c7; background: transparent; cursor: pointer; }
+    .card-menu-button:hover { background: var(--panel-raised); }
+    .card-menu { position: absolute; z-index: 5; top: 26px; right: 0; width: 175px; padding: 5px; border: 1px solid var(--line); border-radius: 5px; background: #252528; box-shadow: 0 10px 24px #0008; }
+    .card-menu button { width: 100%; border: 0; border-radius: 3px; padding: 9px 10px; color: #e4e4e7; background: transparent; text-align: left; cursor: pointer; }
+    .card-menu button:hover { background: #39393e; }
+    .card-menu .danger { color: #ff9a9a; }
+    .game-list { display: grid; gap: 8px; }
+    .game-list .game-card { min-height: 88px; padding: 9px; border: 1px solid #29292d; border-radius: 5px; display: grid; grid-template-columns: 48px minmax(0,1fr) auto; align-items: center; gap: 13px; background: #19191c; }
+    .game-list .poster-button { width: 48px; aspect-ratio: .75; }
+    .game-list .poster-art { padding: 4px; }
+    .game-list .poster-kicker { display: none; }
+    .game-list .poster-title { font-size: 8px; }
+    .game-list .game-meta { min-height: unset; padding: 0; }
+    .game-list .game-subtitle { margin-top: 5px; }
+    .game-list .card-menu-wrap { grid-column: 3; grid-row: 1; }
+    .count-label { margin-top: 25px; color: #96969c; font-size: 12px; }
+    .empty-state { min-height: 220px; padding: 32px 20px; border: 1px dashed #3b3b40; border-radius: 6px; display: grid; place-content: center; justify-items: center; color: #a3a3a9; text-align: center; }
+    .empty-state strong { margin-bottom: 8px; color: #eee; font-size: 16px; }
+    .empty-state button { margin-top: 16px; border: 0; border-radius: 4px; padding: 9px 14px; color: #111; background: #f2f2f3; font-weight: 700; cursor: pointer; }
+    .store-page { margin-top: 23px; }
+    .store-featured { min-height: 340px; position: relative; overflow: hidden; border: 1px solid #303038; border-radius: 10px; background: #17171e; }
+    .store-feature-slide { position: absolute; inset: 0; padding: clamp(24px, 5vw, 56px); display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; visibility: hidden; transition: opacity .45s ease; }
+    .store-feature-slide::before { position: absolute; inset: 0; background: var(--feature-bg); content: ""; }
+    .store-feature-slide::after { position: absolute; inset: 0; background: linear-gradient(90deg, #0d0d13eF 0%, #0d0d13a8 42%, transparent 100%); content: ""; }
+    .store-feature-slide.active { opacity: 1; visibility: visible; }
+    .store-feature-copy { z-index: 1; max-width: 520px; }
+    .store-feature-kicker { color: #b7eaff; font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+    .store-feature-copy h2 { margin: 12px 0; font-size: clamp(30px, 5vw, 48px); line-height: 1.05; }
+    .store-feature-copy p { max-width: 430px; margin: 0; color: #d3d3da; font-size: 15px; line-height: 1.6; }
+    .store-feature-action { margin-top: 22px; min-height: 42px; border: 0; border-radius: 5px; padding: 0 18px; color: #111; background: #f5f5f6; font-weight: 750; cursor: pointer; }
+    .store-feature-controls { position: absolute; z-index: 2; right: 22px; bottom: 23px; display: flex; gap: 8px; }
+    .store-feature-dot { width: 10px; height: 10px; border: 0; border-radius: 50%; padding: 0; background: #ffffff75; cursor: pointer; }
+    .store-feature-dot.active { background: white; box-shadow: 0 0 0 3px #ffffff38; }
+    .store-heading { margin: 35px 0 18px; display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+    .store-heading h2 { margin: 0; font-size: 23px; }
+    .store-heading p { margin: 7px 0 0; color: var(--muted); line-height: 1.5; }
+    .store-heading-tools { display: flex; align-items: center; gap: 12px; }
+    .store-load-button { min-height: 32px; border: 1px solid #48484e; border-radius: 4px; padding: 0 10px; color: #eee; background: #303034; font-size: 11px; font-weight: 650; cursor: pointer; }
+    .store-load-button:hover { background: #39393e; }
+    .store-count { color: var(--muted); font-size: 12px; }
+    .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(166px, 184px)); gap: 24px 18px; align-items: start; }
+    .store-card { min-width: 0; overflow: hidden; border: 1px solid #29292f; border-radius: 6px; background: #19191c; }
+    .store-card-poster { position: relative; aspect-ratio: .86; overflow: hidden; background: #22252b; }
+    .store-card-poster .poster-art { padding: 15px; }
+    .store-card-poster .poster-title { font-size: 20px; }
+    .store-card-info { min-height: 105px; padding: 12px; display: flex; flex-direction: column; align-items: flex-start; }
+    .store-card-title { font-size: 14px; font-weight: 750; overflow-wrap: anywhere; }
+    .store-card-genre { margin-top: 6px; color: var(--muted); font-size: 11px; }
+    .store-get-button { width: 100%; min-height: 34px; margin-top: auto; border: 0; border-radius: 4px; padding: 0 8px; color: #111; background: #f0f0f1; font-weight: 750; cursor: pointer; }
+    .store-get-button:hover:not(:disabled) { background: white; }
+    .store-get-button:disabled { color: #c1c1c5; background: #343438; cursor: default; }
+    .store-empty { grid-column: 1 / -1; min-height: 145px; padding: 25px; border: 1px dashed #3b3b40; border-radius: 6px; display: grid; align-content: center; gap: 8px; color: var(--muted); line-height: 1.55; }
+    .store-empty strong { color: #eee; font-size: 15px; }
+    .filters { border: 1px solid #38383d; border-radius: 10px; overflow: hidden; background: #202023; }
+    .filters-heading { min-height: 49px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 750; }
+    .reset-button { border: 0; color: var(--blue); background: transparent; font-size: 11px; cursor: pointer; }
+    .filter-search { height: 32px; margin: 0 12px 12px; padding: 0 9px; display: flex; align-items: center; gap: 8px; border-radius: 4px; color: #aaaab0; background: #303034; }
+    .filter-search input { width: 100%; border: 0; outline: 0; color: white; background: transparent; font-size: 11px; }
+    .filter-search input::placeholder { color: #a5a5aa; }
+    .filter-query { min-height: 37px; padding: 0 12px; border-top: 1px solid #39393e; display: flex; align-items: center; justify-content: space-between; color: #e4e4e7; background: #3a3a3f; }
+    .remove-query { border: 0; color: #ddd; background: transparent; cursor: pointer; }
+    .filter-group { border-top: 1px solid #39393e; }
+    .filter-group summary { min-height: 47px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; color: #e0e0e2; font-weight: 600; list-style: none; cursor: pointer; }
+    .filter-group summary::-webkit-details-marker { display: none; }
+    .filter-group summary::after { width: 7px; height: 7px; border-right: 1px solid #aaa; border-bottom: 1px solid #aaa; transform: rotate(45deg) translateY(-2px); content: ""; }
+    .filter-options { padding: 0 12px 10px; display: grid; gap: 9px; }
+    .filter-options label { display: flex; align-items: center; gap: 8px; color: #bdbdc2; font-size: 11px; cursor: pointer; }
+    .filter-options input { accent-color: var(--blue); }
+    dialog { width: min(460px, calc(100vw - 28px)); border: 1px solid #44444a; border-radius: 8px; padding: 0; color: var(--text); background: #202023; box-shadow: 0 25px 80px #000b; }
+    dialog::backdrop { background: #000a; backdrop-filter: blur(3px); }
+    .dialog-head { padding: 19px 21px 14px; border-bottom: 1px solid #39393e; display: flex; align-items: center; justify-content: space-between; }
+    .dialog-head h2 { margin: 0; font-size: 18px; }
+    .dialog-close { border: 0; color: #aaa; background: transparent; font-size: 22px; cursor: pointer; }
+    .dialog-content { padding: 18px 21px 21px; }
+    .dialog-help { margin: 0 0 16px; color: #aaaab0; font-size: 12px; line-height: 1.55; }
+    .dialog-help code { color: #d5d5d8; }
+    .form-grid { display: grid; gap: 13px; }
+    .form-field { display: grid; gap: 6px; color: #d0d0d3; font-size: 12px; font-weight: 650; }
+    .form-field input { width: 100%; height: 38px; border: 1px solid #45454b; border-radius: 4px; padding: 0 10px; color: white; background: #141416; font-weight: 400; }
+    .form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 9px; }
+    .form-actions button { min-height: 36px; border: 1px solid #48484e; border-radius: 4px; padding: 0 13px; background: #303034; cursor: pointer; }
+    .form-actions .primary { border-color: #e6e6e7; color: #111; background: #f0f0f1; font-weight: 750; }
+    .master-actions { display: grid; gap: 9px; }
+    .master-actions button { min-height: 42px; border: 1px solid #48484e; border-radius: 4px; padding: 0 12px; display: flex; align-items: center; gap: 10px; color: #eee; background: #303034; text-align: left; cursor: pointer; }
+    .master-actions button:hover { background: #39393e; }
+    .master-actions .icon { color: var(--blue); }
+    .toast { position: fixed; z-index: 10; right: 22px; bottom: 22px; max-width: min(360px, calc(100vw - 40px)); padding: 12px 16px; border: 1px solid #48484e; border-radius: 5px; color: #f4f4f5; background: #29292d; box-shadow: 0 8px 30px #0008; }
+    .hidden { display: none !important; }
+    @media (max-width: 900px) {
+      :root { --sidebar-width: 76px; }
+      .sidebar { padding-inline: 7px; }
+      .brand { width: 36px; height: 36px; }
+      .nav-button { justify-content: center; padding: 0; font-size: 0; }
+      .nav-button .icon { width: 20px; height: 20px; }
+      .side-caption { margin: 25px 0 10px; overflow: hidden; font-size: 8px; text-align: center; }
+      .quick-game { justify-content: center; padding: 5px; font-size: 0; }
+      .quick-empty { display: none; }
+      .main { padding-right: 24px; padding-left: 28px; }
+    }
+    @media (max-width: 680px) {
+      :root { --sidebar-width: 58px; }
+      .sidebar { padding: 16px 5px 12px; }
+      .brand { width: 32px; height: 32px; margin-bottom: 20px; }
+      .nav-button { min-height: 46px; }
+      .side-caption { font-size: 0; }
+      .quick-game { min-height: 44px; }
+      .quick-cover { width: 29px; height: 36px; }
+      .main { padding: 15px 14px 35px 17px; }
+      .topbar { gap: 8px; }
+      .search-wrap { width: min(300px, calc(100vw - 125px)); }
+      .title-row { margin-top: 22px; }
+      h1 { font-size: 27px; }
+      .tabs { margin-top: 26px; }
+      .library-layout { margin-top: 20px; grid-template-columns: minmax(0, 1fr); }
+      .filters { display: none; }
+      .filters.mobile-open { display: block; grid-row: 1; margin-bottom: 4px; }
+      .mobile-filter { display: grid; }
+      .game-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 19px 12px; }
+      .store-page { margin-top: 22px; }
+      .store-featured { min-height: 300px; }
+      .store-feature-slide { padding: 24px; }
+      .store-feature-controls { right: 17px; bottom: 18px; }
+      .store-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px 12px; }
+      .library-tools { flex-wrap: wrap; }
+      .sort-control { font-size: 11px; }
+      .sort-control select { max-width: 150px; font-size: 11px; }
+      .game-list .game-card { grid-template-columns: 43px minmax(0,1fr) auto; }
+      .game-list .poster-button { width: 43px; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="M4 5h3v14H4zM10 5h3v14h-3zM16 5h4v14h-4z"/></symbol>
+    <symbol id="i-store" viewBox="0 0 24 24"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5"/><path d="M5 14v5h14v-5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m-5-5 5 5 5-5"/><path d="M5 16v3h14v-3"/></symbol>
+  </svg>
+  <aside class="sidebar">
+    <div class="brand" role="img" aria-label="Purple lightning bolt logo">
+      <svg class="brand-image" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <radialGradient id="logoGlowTop" cx="32%" cy="8%" r="75%"><stop stop-color="#4022a5"/><stop offset=".72" stop-color="#22135f"/><stop offset="1" stop-color="#090910"/></radialGradient>
+          <radialGradient id="logoGlowBottom" cx="92%" cy="100%" r="78%"><stop stop-color="#45269c"/><stop offset=".66" stop-color="#241462"/><stop offset="1" stop-color="#090910"/></radialGradient>
+          <filter id="logoGrain"><feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+        </defs>
+        <rect width="100" height="100" fill="#080910"/>
+        <path d="M0 0h86C72 30 55 42 21 54 6 59 0 64 0 68Z" fill="url(#logoGlowTop)"/>
+        <path d="M100 37v63H12c28-12 44-28 58-43 11-11 20-16 30-20Z" fill="url(#logoGlowBottom)"/>
+        <rect width="100" height="100" filter="url(#logoGrain)" opacity=".1"/>
+        <path d="M53 20 25 55h26l-2 27 29-35H52Z" fill="none" stroke="#f2f0ff" stroke-width="2.4" stroke-linejoin="miter"/>
+      </svg>
+    </div>
+    <nav class="side-nav" aria-label="Main navigation">
+      <button class="nav-button" type="button" data-nav="Store" aria-current="false"><svg class="icon"><use href="#i-store"/></svg>Store</button>
+      <button class="nav-button active" type="button" data-nav="Library" aria-current="page"><svg class="icon"><use href="#i-library"/></svg>Library</button>
+    </nav>
+    <div class="side-caption">Quick Launch</div>
+    <div id="quickList" class="quick-list"></div>
+    <div class="sidebar-bottom"><span class="status-dot"></span></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button id="backButton" class="back-button" type="button" aria-label="Go back" title="Go back">‹</button>
+      <label class="search-wrap"><svg class="icon" width="15" height="15"><use href="#i-search"/></svg><input id="topSearch" type="search" placeholder="Search library" autocomplete="off" aria-label="Search library"></label>
+    </div>
+    <section id="libraryPage" aria-label="Games library">
+    <div class="title-row"><h1>Library</h1><button id="refreshButton" class="icon-button refresh" type="button" aria-label="Refresh library" title="Refresh library"><svg class="icon"><use href="#i-refresh"/></svg></button></div>
+    <div class="tabs" role="tablist" aria-label="Library view">
+      <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="all">All</button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-tab="favorites">Favorites</button>
+      <button id="addGameButton" class="add-tab" type="button" aria-label="Add a game" title="Add a game"><svg class="icon" width="15" height="15"><use href="#i-plus"/></svg></button>
+      <button id="masterLibraryButton" class="icon-button" type="button" aria-label="Master library tools" title="Master library tools"><svg class="icon"><use href="#i-folder"/></svg></button>
+    </div>
+
+    <div class="library-layout">
+      <section class="library-content" aria-label="Games library">
+        <div class="library-tools">
+          <label class="sort-control">Sort by:
+            <select id="sortSelect" aria-label="Sort games">
+              <option value="recent">Recently Added</option>
+              <option value="name">Title</option>
+              <option value="name-desc">Title (Z to A)</option>
+            </select>
+          </label>
+          <div class="tool-actions">
+            <button id="mobileFilterButton" class="view-button mobile-filter" type="button" aria-label="Show filters" title="Show filters"><svg class="icon"><use href="#i-search"/></svg></button>
+            <button class="view-button active" type="button" data-view="grid" aria-label="Grid view" title="Grid view"><svg class="icon"><use href="#i-grid"/></svg></button>
+            <button class="view-button" type="button" data-view="list" aria-label="List view" title="List view"><svg class="icon"><use href="#i-list"/></svg></button>
+          </div>
+        </div>
+        <div id="gameContainer" class="game-grid"></div>
+        <div id="countLabel" class="count-label"></div>
+      </section>
+
+      <aside id="filters" class="filters" aria-label="Library filters">
+        <div class="filters-heading"><span>Filters <span id="filterCount"></span></span><button id="resetFilters" class="reset-button" type="button">Reset</button></div>
+        <label class="filter-search"><svg class="icon" width="14" height="14"><use href="#i-search"/></svg><input id="filterSearch" type="search" placeholder="Title" autocomplete="off" aria-label="Filter by title"></label>
+        <div id="filterQuery" class="filter-query hidden"><span></span><button class="remove-query" type="button" aria-label="Clear title filter">×</button></div>
+        <details class="filter-group" open>
+          <summary>Installed <span id="installedCount"></span></summary>
+          <div class="filter-options"><label><input id="installedOnly" type="checkbox"> Installed games</label></div>
+        </details>
+        <details class="filter-group"><summary>Genre</summary><div id="genreOptions" class="filter-options"></div></details>
+        <details class="filter-group"><summary>Features</summary><div class="filter-options"><label><input type="checkbox" disabled> Favorites</label></div></details>
+        <details class="filter-group"><summary>Types</summary><div class="filter-options"><label><input type="checkbox" disabled> Games</label></div></details>
+        <details class="filter-group"><summary>Platform</summary><div id="platformOptions" class="filter-options"></div></details>
+      </aside>
+    </div>
+    </section>
+
+    <section id="storePage" class="store-page hidden" aria-label="Free game store">
+      <div class="store-featured" aria-label="Featured games">
+        <!-- Edit these feature slides directly in HTML: update the text and --feature-bg, or duplicate a slide and its dot. -->
+        <article class="store-feature-slide active" data-feature-slide style="--feature-bg: radial-gradient(ellipse at 75% 25%, #2d83a7 0, transparent 38%), linear-gradient(120deg, #122b44, #40245d 56%, #16202d)">
+          <div class="store-feature-copy"><span class="store-feature-kicker">Free games</span><h2>Find your next favorite</h2><p>Browse the store catalog for free games and add them to your library in one click.</p><button class="store-feature-action" type="button" data-feature-action>Browse games</button></div>
+        </article>
+        <article class="store-feature-slide" data-feature-slide style="--feature-bg: radial-gradient(ellipse at 78% 28%, #d17e36 0, transparent 35%), linear-gradient(120deg, #38231d, #623c30 55%, #1a1b26)">
+          <div class="store-feature-copy"><span class="store-feature-kicker">Pick up and play</span><h2>More games, your way</h2><p>New store listings are easy to add: put a game in the games folder, then add its details to the store catalog.</p><button class="store-feature-action" type="button" data-feature-action>See the catalog</button></div>
+        </article>
+        <article class="store-feature-slide" data-feature-slide style="--feature-bg: radial-gradient(ellipse at 78% 25%, #358f74 0, transparent 37%), linear-gradient(120deg, #142d2b, #214b49 52%, #18212c)">
+          <div class="store-feature-copy"><span class="store-feature-kicker">Always free</span><h2>Your next game is waiting</h2><p>Store games are local HTML games included with this launcher. Add a listing to make it show up in your library.</p><button class="store-feature-action" type="button" data-feature-action>Explore free games</button></div>
+        </article>
+        <div class="store-feature-controls" aria-label="Featured slide controls">
+          <button class="store-feature-dot active" type="button" data-feature-dot aria-label="Show featured slide 1" aria-pressed="true"></button>
+          <button class="store-feature-dot" type="button" data-feature-dot aria-label="Show featured slide 2" aria-pressed="false"></button>
+          <button class="store-feature-dot" type="button" data-feature-dot aria-label="Show featured slide 3" aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="store-heading">
+        <div><h2>Free games</h2><p id="storeDescription">Add games from the catalog to your library.</p></div>
+        <div class="store-heading-tools">
+          <button id="loadStoreCatalogButton" class="store-load-button" type="button">Load JSON</button>
+          <input id="storeCatalogInput" type="file" accept=".json,application/json" hidden>
+          <span id="storeCount" class="store-count"></span>
+        </div>
+      </div>
+      <div id="storeGrid" class="store-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <dialog id="addDialog">
+    <form id="addForm">
+      <div class="dialog-head"><h2>Add a game</h2><button class="dialog-close" type="button" aria-label="Close">×</button></div>
+      <div class="dialog-content">
+        <p class="dialog-help">Games must be inside the <code>games/</code> folder. Add a local cover PNG from that folder or use an HTTP/HTTPS image URL.</p>
+        <div class="form-grid">
+          <label class="form-field">Game title<input name="title" required maxlength="48" placeholder="My Game"></label>
+          <label class="form-field">Game HTML path<input name="launch" required placeholder="games/My Game/index.html"></label>
+          <label class="form-field">Cover image (PNG or URL)<input name="cover" placeholder="games/My Game/cover.png or https://..."></label>
+          <label class="form-field">Genre<input name="genre" maxlength="24" placeholder="Arcade"></label>
+        </div>
+        <div class="form-actions"><button class="cancel-button" type="button">Cancel</button><button class="primary" type="submit">Add to library</button></div>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="masterDialog">
+    <div class="dialog-head"><h2>Master Library</h2><button class="dialog-close master-dialog-close" type="button" aria-label="Close">×</button></div>
+    <div class="dialog-content">
+      <div class="master-actions">
+        <button id="scanGamesButton" type="button"><svg class="icon"><use href="#i-folder"/></svg>Scan games folder</button>
+        <button id="importCatalogButton" type="button"><svg class="icon"><use href="#i-upload"/></svg>Import master catalog</button>
+        <button id="exportCatalogButton" type="button"><svg class="icon"><use href="#i-download"/></svg>Export master catalog</button>
+        <button id="restoreMasterButton" type="button"><svg class="icon"><use href="#i-refresh"/></svg>Restore master list</button>
+      </div>
+      <input id="gamesFolderInput" type="file" webkitdirectory directory multiple hidden>
+      <input id="masterCatalogInput" type="file" accept=".json,application/json" hidden>
+    </div>
+  </dialog>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "arcade-library-games-v1";
+      const MASTER_STORAGE_KEY = "arcade-library-master-v1";
+      // Fallback for browsers that block reading neighboring files from a local C:/ page.
+      const fallbackStoreCatalog = {
+        schemaVersion: 1,
+        games: [
+          { title: "Test", launch: "games/TEST%20GAME/test_game.html", cover: "https://img.freepik.com/premium-vector/modern-design-icon-test_362714-3282.jpg?w=2000", genre: "Arcade" },
+          { title: "Wordle Unlimited", launch: "games/Wordle%20Unlimited/wordle.html", cover: "https://cdn.corenexis.com/f/DVhhnLV6.avif", genre: "Arcade" },
+          { title: "Block Breaker", launch: "games/Block%20Breaker/block_breaker.html", cover: "https://cdn.corenexis.com/f/P17WnHS3.webp", genre: "Arcade" },
+          { title: "Retro Bowl Cracked", launch: "games/Retro%20Bowl%20Cracked/RetroBowl-CRACKED-AutoSave1111.html", cover: "https://cdn.corenexis.com/f/wyRl7Wjh.png", genre: "Sports" },
+          { title: "Time Shooter", launch: "games/Time%20Shooter/timeshooter3.html", cover: "https://cdn.corenexis.com/f/0hGLgeZL.png", genre: "Arcade" },
+          { title: "Block Eat Block", launch: "games/Block%20Eat%20Block/blockeatblock.html", cover: "https://cdn.corenexis.com/f/9OgwW6ZP.png", genre: "Arcade" },
+          { title: "1v1 Soccer", launch: "games/1v1%20Soccer/1v1s.html", cover: "https://cdn.corenexis.com/f/wwYQ2y6D.webp", genre: "Sports" },
+          { title: "1v1.LOL", launch: "games/1v1%20dot%20lol/1v1dotlol.html", cover: "https://cdn.corenexis.com/f/TFFSh5D0.png", genre: "Shooter" },
+          { title: "Angry Birds", launch: "games/Angry%20Birds/birds.html", cover: "https://cdn.corenexis.com/f/BswTo6lX.jpg", genre: "Arcade" },
+          { title: "2048", launch: "games/2048/2048.html", cover: "https://cdn.corenexis.com/f/Nfu2VvkX.png", genre: "Arcade" },
+          { title: "Mario vs Luigi", launch: "games/mariovsluigi/mariovsluigi.html", cover: "https://cdn.corenexis.com/f/hTUKMU4Z.jpg", genre: "Arcade" },
+          { title: "Test", launch: "games/TEST%20GAME/test_game.html", cover: "https://img.freepik.com/premium-vector/modern-design-icon-test_362714-3282.jpg?w=2000", genre: "Arcade" },
+          { title: "Stick Man Hook", launch: "games/Stick%20Man%20Hook/SMH.html", cover: "https://cdn.corenexis.com/f/t8qAGqh5.jpg", genre: "Arcade" },
+          { title: "Candy Crush", launch: "games/Candy%20Crush/candy_crush.html", cover: "https://cdn.corenexis.com/f/dx28Ir7P.jpg", genre: "Arcade" },
+          { title: "Crossy Road", launch: "games/Crossy%20Road/Crossy_Road.html", cover: "https://cdn.corenexis.com/f/9gHZ9YF2.png", genre: "Arcade" },
+          { title: "Bubble Shooter", launch: "games/Bubble%20Shooter/Bubbler_Shooter.html", cover: "https://cdn.corenexis.com/f/U08ZcvH2.jpg", genre: "Arcade" },
+          { title: "Basketball Stars", launch: "games/Basketball%20Stars/basketball_stars.html", cover: "https://cdn.corenexis.com/f/vWWhP7tp.webp", genre: "Sports" },
+          { title: "Drift Boss", launch: "games/Drift%20Boss/DB.html", cover: "https://cdn.corenexis.com/f/jx5UUEl6.png", genre: "Arcade" },
+          { title: "Granny", launch: "games/Granny/granny.html", cover: "https://cdn.corenexis.com/f/0rH6MGVD.jpg", genre: "Arcade" },
+          { title: "8 Ball", launch: "games/8%20Ball/eight_ball.html", cover: "https://cdn.corenexis.com/f/QS0MOGRb.webp", genre: "Arcade" },
+          { title: "Cut the Rope", launch: "games/Cut%20The%20Rope/CTR/CTR.html", cover: "https://cdn.corenexis.com/f/oAApVl4U.jpg", genre: "Arcade" }
+        ]
+      };
+      const starterGames = [{
+        id: "starter-block-breaker",
+        title: "Block Breaker",
+        launch: "games/Block%20Breaker/index.html",
+        cover: "",
+        genre: "Arcade",
+        platform: "Browser",
+        installed: true,
+        favorite: false,
+        addedAt: 1
+      }];
+      const elements = {
+        container: document.querySelector("#gameContainer"),
+        libraryPage: document.querySelector("#libraryPage"),
+        storePage: document.querySelector("#storePage"),
+        storeGrid: document.querySelector("#storeGrid"),
+        storeCount: document.querySelector("#storeCount"),
+        storeDescription: document.querySelector("#storeDescription"),
+        storeCatalogInput: document.querySelector("#storeCatalogInput"),
+        count: document.querySelector("#countLabel"),
+        topSearch: document.querySelector("#topSearch"),
+        filterSearch: document.querySelector("#filterSearch"),
+        filterQuery: document.querySelector("#filterQuery"),
+        filterCount: document.querySelector("#filterCount"),
+        installedCount: document.querySelector("#installedCount"),
+        installedOnly: document.querySelector("#installedOnly"),
+        genreOptions: document.querySelector("#genreOptions"),
+        platformOptions: document.querySelector("#platformOptions"),
+        quickList: document.querySelector("#quickList"),
+        dialog: document.querySelector("#addDialog"),
+        masterDialog: document.querySelector("#masterDialog"),
+        gamesFolderInput: document.querySelector("#gamesFolderInput"),
+        masterCatalogInput: document.querySelector("#masterCatalogInput"),
+        form: document.querySelector("#addForm"),
+        toast: document.querySelector("#toast"),
+        filters: document.querySelector("#filters")
+      };
+      let games = loadGames();
+      let storeGames = parseCatalogEntries(fallbackStoreCatalog);
+      let storeCatalogNotice = "";
+      let masterGames = loadMasterGames();
+      if (!masterGames) {
+        masterGames = toMasterEntries(games);
+        saveMasterGames();
+      }
+      let activeTab = "all";
+      let activeView = "grid";
+      let searchTerm = "";
+      let selectedGenres = new Set();
+      let selectedPlatforms = new Set();
+      let openMenuId = null;
+      let editingGameId = null;
+      let toastTimer;
+
+      function loadGames() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved !== null) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return parsed;
+          }
+        } catch (error) {
+          console.warn("Could not load saved library", error);
+        }
+        return starterGames.map(game => ({ ...game }));
+      }
+
+      function saveGames() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+        } catch (error) {
+          showToast("Your browser could not save the library. Check its storage settings.");
+        }
+      }
+
+      function toMasterEntries(entries) {
+        return entries.map(({ title, launch, cover, genre }) => ({ title, launch, cover: cover || "", genre: genre || "Other" }));
+      }
+
+      function loadMasterGames() {
+        try {
+          const saved = localStorage.getItem(MASTER_STORAGE_KEY);
+          if (saved !== null) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return toMasterEntries(parsed);
+          }
+        } catch (error) {
+          console.warn("Could not load master catalog", error);
+        }
+        return null;
+      }
+
+      function saveMasterGames() {
+        try {
+          localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(masterGames));
+        } catch (error) {
+          showToast("Your browser could not save the master catalog.");
+        }
+      }
+
+      function encodeRelativePath(path) {
+        return path.split("/").map(segment => encodeURIComponent(segment)).join("/");
+      }
+
+      function mergeCatalogEntries(entries) {
+        let added = 0;
+        let updated = 0;
+        for (const entry of entries) {
+          const launchKey = entry.launch.toLocaleLowerCase();
+          const titleKey = entry.title.toLocaleLowerCase();
+          const existing = games.find(game => normalizeGamePath(game.launch, ".html").toLocaleLowerCase() === launchKey || game.title.toLocaleLowerCase() === titleKey);
+          if (existing) {
+            Object.assign(existing, entry);
+            updated++;
+          } else {
+            games.push({
+              ...entry,
+              id: `game-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              platform: "Browser",
+              installed: true,
+              favorite: false,
+              addedAt: Date.now() + added
+            });
+            added++;
+          }
+        }
+        saveGames();
+        render();
+        return { added, updated };
+      }
+
+      function reportCatalogMerge(result) {
+        showToast(`Master catalog: ${result.added} added, ${result.updated} updated.`);
+      }
+
+      function parseCatalogEntries(catalog) {
+        if (!catalog || !Array.isArray(catalog.games)) throw new Error("Catalog must contain a games array.");
+        return catalog.games.flatMap(game => {
+          const title = String(game.title || "").trim();
+          const launch = normalizeGamePath(game.launch, ".html");
+          const coverInput = String(game.cover || "").trim();
+          const cover = coverInput ? normalizeCoverPath(coverInput) : "";
+          if (!title || !launch || (coverInput && !cover)) return [];
+          return [{ title, launch, cover, genre: String(game.genre || "Other").trim() || "Other" }];
+        });
+      }
+
+      async function loadBundledCatalog() {
+        try {
+          const response = await fetch(new URL("master-catalog.json", document.baseURI), { cache: "no-cache" });
+          if (!response.ok) throw new Error(`Catalog request failed with status ${response.status}.`);
+          const entries = parseCatalogEntries(await response.json());
+          if (!entries.length) throw new Error("No valid games found in the bundled catalog.");
+          masterGames = toMasterEntries(entries);
+          saveMasterGames();
+          mergeCatalogEntries(entries);
+        } catch (error) {
+          console.warn("Could not load bundled master catalog", error);
+          showToast("Could not load the game catalog. Showing your saved library.");
+        }
+      }
+
+      function scanGamesFolder(files) {
+        const folders = new Map();
+        for (const file of files) {
+          const relativePath = String(file.webkitRelativePath || "").replace(/\\/g, "/");
+          const segments = relativePath.split("/");
+          if (segments.length !== 3 || segments[0].toLocaleLowerCase() !== "games" || !segments[1]) continue;
+          const folderName = segments[1];
+          let folder = folders.get(folderName);
+          if (!folder) {
+            folder = { html: [], images: [] };
+            folders.set(folderName, folder);
+          }
+          const encodedPath = encodeRelativePath(relativePath);
+          if (file.name.toLocaleLowerCase().endsWith(".html")) {
+            const launch = normalizeGamePath(encodedPath, ".html");
+            if (launch) folder.html.push({ name: file.name, launch });
+          } else if (file.name.toLocaleLowerCase().endsWith(".png")) {
+            const cover = normalizeGamePath(encodedPath, ".png");
+            if (cover) folder.images.push({ name: file.name, cover });
+          }
+        }
+        const entries = [];
+        for (const [title, folder] of folders) {
+          const mainFile = folder.html.find(file => file.name.toLocaleLowerCase() === "index.html") || folder.html[0];
+          if (!mainFile) continue;
+          const coverFile = folder.images.find(file => file.name.toLocaleLowerCase() === "cover.png") || folder.images[0];
+          entries.push({ title, launch: mainFile.launch, cover: coverFile?.cover || "", genre: "Other" });
+        }
+        if (!entries.length) {
+          showToast("No game HTML files found. Select the games folder containing your game folders.");
+          return;
+        }
+        masterGames = toMasterEntries(entries);
+        saveMasterGames();
+        reportCatalogMerge(mergeCatalogEntries(entries));
+      }
+
+      async function importMasterCatalog(file) {
+        try {
+          const entries = parseCatalogEntries(JSON.parse(await file.text()));
+          if (!entries.length) {
+            showToast("No valid games found in that catalog.");
+            return;
+          }
+          masterGames = toMasterEntries(entries);
+          saveMasterGames();
+          reportCatalogMerge(mergeCatalogEntries(entries));
+        } catch (error) {
+          showToast("Could not read that master catalog JSON file.");
+        }
+      }
+
+      function exportMasterCatalog() {
+        masterGames = toMasterEntries(games);
+        saveMasterGames();
+        const catalog = {
+          schemaVersion: 1,
+          games: masterGames
+        };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "master-catalog.json";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast("Master catalog exported.");
+      }
+
+      function restoreMasterLibrary() {
+        if (!masterGames.length) {
+          showToast("Import, scan, or export a master catalog first.");
+          return;
+        }
+        if (!window.confirm("Overwrite your library with the saved master list?")) return;
+        games = masterGames.map((entry, index) => {
+          const launchPath = normalizeGamePath(entry.launch, ".html").toLocaleLowerCase();
+          const title = entry.title.toLocaleLowerCase();
+          const current = games.find(game => normalizeGamePath(game.launch, ".html").toLocaleLowerCase() === launchPath || game.title.toLocaleLowerCase() === title);
+          return {
+            ...entry,
+            id: current?.id || `master-${Date.now()}-${index}`,
+            platform: current?.platform || "Browser",
+            favorite: current?.favorite || false,
+            installed: current?.installed ?? true,
+            addedAt: current?.addedAt ?? Date.now() + index
+          };
+        });
+        saveGames();
+        render();
+        showToast("Library restored to the master list.");
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
+      }
+
+      function normalizeGamePath(value, extension) {
+        let path = String(value || "").trim().replace(/\\/g, "/").replace(/^(?:\.\/)+/, "");
+        let decoded = path;
+        try {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            const next = decodeURIComponent(decoded);
+            if (next === decoded) break;
+            decoded = next;
+          }
+        } catch (error) {
+          return "";
+        }
+        decoded = decoded.replace(/\\/g, "/");
+        const segments = decoded.split("/");
+        if (!/^games\//i.test(decoded) || decoded.startsWith("/") || segments.some(segment => !segment || segment === "." || segment === "..")) return "";
+        if (extension && !decoded.toLowerCase().endsWith(extension)) return "";
+        return path;
+      }
+
+      function normalizeCoverPath(value) {
+        const path = String(value || "").trim();
+        if (!path) return "";
+        if (/^https?:\/\//i.test(path)) {
+          try {
+            const url = new URL(path);
+            if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+          } catch (error) {
+            return "";
+          }
+          return "";
+        }
+        return normalizeGamePath(path, ".png");
+      }
+
+      function showToast(message) {
+        elements.toast.textContent = message;
+        elements.toast.classList.remove("hidden");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => elements.toast.classList.add("hidden"), 2800);
+      }
+
+      function filteredGames() {
+        const query = searchTerm.trim().toLocaleLowerCase();
+        let visible = games.filter(game => {
+          if (activeTab === "favorites" && !game.favorite) return false;
+          if (query && !game.title.toLocaleLowerCase().includes(query)) return false;
+          if (elements.installedOnly.checked && !game.installed) return false;
+          if (selectedGenres.size && !selectedGenres.has(game.genre || "Other")) return false;
+          if (selectedPlatforms.size && !selectedPlatforms.has(game.platform || "Browser")) return false;
+          return true;
+        });
+        const sort = document.querySelector("#sortSelect").value;
+        if (sort === "name") visible.sort((a, b) => a.title.localeCompare(b.title));
+        else if (sort === "name-desc") visible.sort((a, b) => b.title.localeCompare(a.title));
+        else visible.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+        return visible;
+      }
+
+      function posterMarkup(game) {
+        const title = escapeHtml(game.title);
+        const imagePath = normalizeCoverPath(game.cover);
+        return `<span class="poster-art"><span class="poster-kicker">Arcade Library</span><span class="poster-title">${title}</span></span>${imagePath ? `<img class="poster-image" src="${escapeHtml(imagePath)}" alt="${title} cover" onerror="this.remove()">` : ""}`;
+      }
+
+      function gameCard(game) {
+        const id = escapeHtml(game.id);
+        const title = escapeHtml(game.title);
+        const isMenuOpen = openMenuId === game.id;
+        return `<article class="game-card" data-id="${id}">
+          <button class="poster-button" type="button" data-action="launch" data-id="${id}" aria-label="Launch ${title}" title="Launch ${title}">${posterMarkup(game)}</button>
+          <div class="game-meta"><div><div class="game-name">${title}</div><div class="game-subtitle"><span class="launch-mark"></span><span>Launch</span></div></div>
+            <div class="card-menu-wrap"><button class="card-menu-button" type="button" data-action="menu" data-id="${id}" aria-label="More options for ${title}" aria-expanded="${isMenuOpen}">•••</button>
+              ${isMenuOpen ? `<div class="card-menu"><button type="button" data-action="edit" data-id="${id}">Edit Settings</button><button type="button" data-action="favorite" data-id="${id}">${game.favorite ? "Remove from Favorites" : "Add to Favorites"}</button><button type="button" data-action="installed" data-id="${id}">${game.installed ? "Mark as Not Installed" : "Mark as Installed"}</button><button class="danger" type="button" data-action="remove" data-id="${id}">Remove from Library</button></div>` : ""}
+            </div>
+          </div>
+        </article>`;
+      }
+
+      function setOptions(container, values, selected, type) {
+        const sorted = [...values].sort((a, b) => a.localeCompare(b));
+        container.innerHTML = sorted.length ? sorted.map(value => `<label><input type="checkbox" data-filter="${type}" value="${escapeHtml(value)}" ${selected.has(value) ? "checked" : ""}> ${escapeHtml(value)}</label>`).join("") : `<span style="color:#89898f;font-size:11px">No ${type} options</span>`;
+      }
+
+      function render() {
+        const genreValues = new Set(games.map(game => game.genre || "Other"));
+        const platformValues = new Set(games.map(game => game.platform || "Browser"));
+        selectedGenres = new Set([...selectedGenres].filter(value => genreValues.has(value)));
+        selectedPlatforms = new Set([...selectedPlatforms].filter(value => platformValues.has(value)));
+        setOptions(elements.genreOptions, genreValues, selectedGenres, "genre");
+        setOptions(elements.platformOptions, platformValues, selectedPlatforms, "platform");
+        const visible = filteredGames();
+        elements.container.className = activeView === "grid" ? "game-grid" : "game-list";
+        elements.container.innerHTML = visible.length ? visible.map(gameCard).join("") : `<div class="empty-state"><strong>${games.length ? "No games found" : "Your library is empty"}</strong><span>${games.length ? "Try changing your search or filters." : "Add a game folder to start your library."}</span><button type="button" data-action="add">Add a game</button></div>`;
+        elements.count.textContent = `Showing ${visible.length} of ${games.length}`;
+        elements.installedCount.textContent = `(${games.filter(game => game.installed).length})`;
+        const activeFilters = (searchTerm ? 1 : 0) + (elements.installedOnly.checked ? 1 : 0) + selectedGenres.size + selectedPlatforms.size;
+        elements.filterCount.textContent = activeFilters ? `(${activeFilters})` : "";
+        elements.filterQuery.classList.toggle("hidden", !searchTerm.trim());
+        elements.filterQuery.querySelector("span").textContent = searchTerm;
+        elements.quickList.innerHTML = games.length ? games.slice(0, 4).map(game => `<button class="quick-game" type="button" data-action="launch" data-id="${escapeHtml(game.id)}" title="Launch ${escapeHtml(game.title)}"><span class="quick-cover">${posterMarkup(game)}</span><span>${escapeHtml(game.title)}</span></button>`).join("") : `<div class="quick-empty">Your games will appear here</div>`;
+        document.querySelectorAll(".tab[data-tab]").forEach(tab => {
+          const selected = tab.dataset.tab === activeTab;
+          tab.classList.toggle("active", selected);
+          tab.setAttribute("aria-selected", String(selected));
+        });
+        document.querySelectorAll(".view-button[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === activeView));
+        renderStore();
+      }
+
+      function findLibraryGame(entry) {
+        const launchKey = normalizeGamePath(entry.launch, ".html").toLocaleLowerCase();
+        const titleKey = entry.title.toLocaleLowerCase();
+        return games.find(game => normalizeGamePath(game.launch, ".html").toLocaleLowerCase() === launchKey || game.title.toLocaleLowerCase() === titleKey);
+      }
+
+      function renderStore() {
+        const query = searchTerm.trim().toLocaleLowerCase();
+        const visible = storeGames.filter(game => !query || game.title.toLocaleLowerCase().includes(query) || (game.genre || "Other").toLocaleLowerCase().includes(query));
+        elements.storeCount.textContent = `${visible.length} of ${storeGames.length}`;
+        elements.storeDescription.textContent = storeCatalogNotice || "Add games from the catalog to your library.";
+        if (!visible.length) {
+          const message = storeGames.length
+            ? `<strong>No games found</strong><span>Try a different search.</span>`
+            : `<strong>No games in the store yet</strong><span>Put a game’s HTML files inside <code>games/</code>, then add its title, launch path, cover, and genre to store.json.</span>`;
+          elements.storeGrid.innerHTML = `<div class="store-empty">${message}</div>`;
+          return;
+        }
+        elements.storeGrid.innerHTML = visible.map(game => {
+          const gameIndex = storeGames.indexOf(game);
+          const title = escapeHtml(game.title);
+          const isInLibrary = Boolean(findLibraryGame(game));
+          return `<article class="store-card">
+            <div class="store-card-poster">${posterMarkup(game)}</div>
+            <div class="store-card-info"><div class="store-card-title">${title}</div><div class="store-card-genre">${escapeHtml(game.genre || "Other")} · Free</div>
+              <button class="store-get-button" type="button" data-action="get-store-game" data-index="${gameIndex}" ${isInLibrary ? "disabled" : ""}>${isInLibrary ? "In Library" : "Get"}</button>
+            </div>
+          </article>`;
+        }).join("");
+      }
+
+      async function loadStoreCatalog() {
+        try {
+          const response = await fetch(new URL("store.json", document.baseURI), { cache: "no-cache" });
+          if (!response.ok) throw new Error(`Store catalog request failed with status ${response.status}.`);
+          storeGames = parseCatalogEntries(await response.json());
+          storeCatalogNotice = "";
+        } catch (error) {
+          storeCatalogNotice = location.protocol === "file:"
+            ? "Showing the built-in list. This browser blocks automatic reads from C:/; use Load JSON to select the latest store.json."
+            : "Showing the built-in list because store.json could not be loaded. Use Load JSON to select it.";
+          console.warn("Could not load store catalog", error);
+        }
+        renderStore();
+      }
+
+      async function loadStoreCatalogFile(file) {
+        try {
+          storeGames = parseCatalogEntries(JSON.parse(await file.text()));
+          storeCatalogNotice = `Loaded ${storeGames.length} games from ${file.name}.`;
+          renderStore();
+          showToast("Store catalog loaded.");
+        } catch (error) {
+          console.warn("Could not read selected store catalog", error);
+          showToast("Could not read that store JSON file.");
+        }
+      }
+
+      function getStoreGame(index) {
+        const entry = storeGames[index];
+        if (!entry) return;
+        if (findLibraryGame(entry)) {
+          showToast(`${entry.title} is already in your library.`);
+          return;
+        }
+        mergeCatalogEntries([entry]);
+        showToast(`${entry.title} added to your library.`);
+      }
+
+      function launchGame(id) {
+        const game = games.find(item => item.id === id);
+        if (!game) return;
+        const launchPath = normalizeGamePath(game.launch, ".html");
+        if (!launchPath) {
+          showToast("Games must launch from an HTML file inside the games folder.");
+          return;
+        }
+        window.location.href = launchPath;
+      }
+
+      function openAddDialog() {
+        editingGameId = null;
+        elements.form.reset();
+        elements.dialog.querySelector("h2").textContent = "Add a game";
+        elements.form.querySelector('[type="submit"]').textContent = "Add to library";
+        elements.dialog.showModal();
+      }
+
+      function openEditDialog(game) {
+        editingGameId = game.id;
+        elements.form.elements.title.value = game.title || "";
+        elements.form.elements.launch.value = game.launch || "";
+        elements.form.elements.cover.value = game.cover || "";
+        elements.form.elements.genre.value = game.genre === "Other" ? "" : (game.genre || "");
+        elements.dialog.querySelector("h2").textContent = "Edit Game Settings";
+        elements.form.querySelector('[type="submit"]').textContent = "Save Changes";
+        openMenuId = null;
+        render();
+        elements.dialog.showModal();
+      }
+
+      document.querySelector("#addGameButton").addEventListener("click", openAddDialog);
+      document.querySelector("#masterLibraryButton").addEventListener("click", () => elements.masterDialog.showModal());
+      document.querySelector(".master-dialog-close").addEventListener("click", () => elements.masterDialog.close());
+      elements.masterDialog.addEventListener("click", event => { if (event.target === elements.masterDialog) elements.masterDialog.close(); });
+      document.querySelector("#scanGamesButton").addEventListener("click", () => elements.gamesFolderInput.click());
+      document.querySelector("#loadStoreCatalogButton").addEventListener("click", () => elements.storeCatalogInput.click());
+      elements.storeCatalogInput.addEventListener("change", async () => {
+        const file = elements.storeCatalogInput.files?.[0];
+        if (file) await loadStoreCatalogFile(file);
+        elements.storeCatalogInput.value = "";
+      });
+      elements.gamesFolderInput.addEventListener("change", () => {
+        scanGamesFolder(Array.from(elements.gamesFolderInput.files || []));
+        elements.gamesFolderInput.value = "";
+      });
+      document.querySelector("#exportCatalogButton").addEventListener("click", exportMasterCatalog);
+      document.querySelector("#restoreMasterButton").addEventListener("click", restoreMasterLibrary);
+      document.querySelector("#importCatalogButton").addEventListener("click", () => elements.masterCatalogInput.click());
+      elements.masterCatalogInput.addEventListener("change", async () => {
+        const file = elements.masterCatalogInput.files?.[0];
+        if (file) await importMasterCatalog(file);
+        elements.masterCatalogInput.value = "";
+      });
+      document.querySelector(".dialog-close").addEventListener("click", () => elements.dialog.close());
+      document.querySelector(".cancel-button").addEventListener("click", () => elements.dialog.close());
+      elements.dialog.addEventListener("click", event => { if (event.target === elements.dialog) elements.dialog.close(); });
+      elements.form.addEventListener("submit", event => {
+        event.preventDefault();
+        const formData = new FormData(elements.form);
+        const title = String(formData.get("title") || "").trim();
+        const launch = normalizeGamePath(formData.get("launch"), ".html");
+        const coverInput = String(formData.get("cover") || "").trim();
+        const cover = coverInput ? normalizeCoverPath(coverInput) : "";
+        const wasEditing = Boolean(editingGameId);
+        if (!title || !launch || (coverInput && !cover)) {
+          showToast("Use an HTML game path inside games/ and a local PNG or HTTP(S) URL for the cover.");
+          return;
+        }
+        const genre = String(formData.get("genre") || "").trim() || "Other";
+        if (editingGameId) {
+          const game = games.find(item => item.id === editingGameId);
+          if (!game) return;
+          Object.assign(game, { title, launch, cover, genre });
+        } else {
+          games.unshift({
+            id: `game-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            title,
+            launch,
+            cover,
+            genre,
+            platform: "Browser",
+            installed: true,
+            favorite: false,
+            addedAt: Date.now()
+          });
+        }
+        saveGames();
+        elements.form.reset();
+        elements.dialog.close();
+        editingGameId = null;
+        activeTab = "all";
+        render();
+        showToast(wasEditing ? `${title} settings saved.` : `${title} added to your library.`);
+      });
+
+      document.querySelectorAll(".tab[data-tab]").forEach(button => button.addEventListener("click", () => { activeTab = button.dataset.tab; render(); }));
+      document.querySelectorAll(".view-button[data-view]").forEach(button => button.addEventListener("click", () => { activeView = button.dataset.view; render(); }));
+      document.querySelector("#sortSelect").addEventListener("change", render);
+      elements.topSearch.addEventListener("input", () => { searchTerm = elements.topSearch.value; elements.filterSearch.value = searchTerm; render(); });
+      elements.filterSearch.addEventListener("input", () => { searchTerm = elements.filterSearch.value; elements.topSearch.value = searchTerm; render(); });
+      elements.filterQuery.querySelector("button").addEventListener("click", () => { searchTerm = ""; elements.filterSearch.value = ""; elements.topSearch.value = ""; render(); });
+      elements.installedOnly.addEventListener("change", render);
+      elements.genreOptions.addEventListener("change", event => { if (event.target.matches("input")) { event.target.checked ? selectedGenres.add(event.target.value) : selectedGenres.delete(event.target.value); render(); } });
+      elements.platformOptions.addEventListener("change", event => { if (event.target.matches("input")) { event.target.checked ? selectedPlatforms.add(event.target.value) : selectedPlatforms.delete(event.target.value); render(); } });
+      document.querySelector("#resetFilters").addEventListener("click", () => {
+        searchTerm = "";
+        elements.topSearch.value = "";
+        elements.filterSearch.value = "";
+        elements.installedOnly.checked = false;
+        selectedGenres.clear();
+        selectedPlatforms.clear();
+        render();
+      });
+      document.querySelector("#refreshButton").addEventListener("click", () => { games = loadGames(); render(); showToast("Library refreshed."); });
+      document.querySelector("#backButton").addEventListener("click", () => { if (history.length > 1) history.back(); else showToast("You are at the start of the library."); });
+      document.querySelector("#mobileFilterButton").addEventListener("click", () => elements.filters.classList.toggle("mobile-open"));
+      document.querySelectorAll(".nav-button").forEach(button => button.addEventListener("click", () => {
+        switchPage(button.dataset.nav);
+      }));
+      elements.container.addEventListener("click", event => handleCardAction(event));
+      elements.quickList.addEventListener("click", event => handleCardAction(event));
+      elements.storeGrid.addEventListener("click", event => {
+        const button = event.target.closest('[data-action="get-store-game"]');
+        if (button) getStoreGame(Number(button.dataset.index));
+      });
+      document.querySelectorAll("[data-feature-action]").forEach(button => button.addEventListener("click", () => {
+        elements.storeGrid.scrollIntoView({ behavior: "smooth", block: "start" });
+      }));
+      const featureSlides = Array.from(document.querySelectorAll("[data-feature-slide]"));
+      const featureDots = Array.from(document.querySelectorAll("[data-feature-dot]"));
+      let activeFeatureSlide = 0;
+      function setFeatureSlide(index) {
+        activeFeatureSlide = index;
+        featureSlides.forEach((slide, slideIndex) => slide.classList.toggle("active", slideIndex === index));
+        featureDots.forEach((dot, dotIndex) => {
+          const selected = dotIndex === index;
+          dot.classList.toggle("active", selected);
+          dot.setAttribute("aria-pressed", String(selected));
+        });
+      }
+      featureDots.forEach((dot, index) => dot.addEventListener("click", () => setFeatureSlide(index)));
+      if (featureSlides.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setInterval(() => setFeatureSlide((activeFeatureSlide + 1) % featureSlides.length), 6500);
+      }
+      document.addEventListener("click", event => {
+        if (openMenuId && !event.target.closest(".card-menu-wrap")) { openMenuId = null; render(); }
+      });
+
+      function switchPage(page) {
+        const showStore = page === "Store";
+        elements.libraryPage.classList.toggle("hidden", showStore);
+        elements.storePage.classList.toggle("hidden", !showStore);
+        document.querySelectorAll(".nav-button").forEach(button => {
+          const selected = button.dataset.nav === page;
+          button.classList.toggle("active", selected);
+          button.setAttribute("aria-current", selected ? "page" : "false");
+        });
+        const placeholder = showStore ? "Search free games" : "Search library";
+        elements.topSearch.placeholder = placeholder;
+        elements.topSearch.setAttribute("aria-label", placeholder);
+        searchTerm = "";
+        elements.topSearch.value = "";
+        elements.filterSearch.value = "";
+        render();
+      }
+
+      function handleCardAction(event) {
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const { action, id } = button.dataset;
+        if (action === "add") { openAddDialog(); return; }
+        if (action === "launch") { launchGame(id); return; }
+        const game = games.find(item => item.id === id);
+        if (!game) return;
+        if (action === "menu") { openMenuId = openMenuId === id ? null : id; render(); }
+        if (action === "edit") { openEditDialog(game); return; }
+        if (action === "favorite") { game.favorite = !game.favorite; openMenuId = null; saveGames(); render(); }
+        if (action === "installed") { game.installed = !game.installed; openMenuId = null; saveGames(); render(); }
+        if (action === "remove") {
+          games = games.filter(item => item.id !== id);
+          openMenuId = null;
+          saveGames();
+          render();
+          showToast(`${game.title} removed from your library.`);
+        }
+      }
+
+      render();
+      loadBundledCatalog();
+      loadStoreCatalog();
+    })();
+  </script>
+</body>
+</html>

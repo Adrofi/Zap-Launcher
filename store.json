@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "games": [
+    {
+      "title": "Test",
+      "launch": "games/TEST%20GAME/test_game.html",
+      "cover": "https://img.freepik.com/premium-vector/modern-design-icon-test_362714-3282.jpg?w=2000",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Wordle Unlimited",
+      "launch": "games/Wordle%20Unlimited/wordle.html",
+      "cover": "https://cdn.corenexis.com/f/DVhhnLV6.avif",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Block Breaker",
+      "launch": "games/Block%20Breaker/block_breaker.html",
+      "cover": "https://cdn.corenexis.com/f/P17WnHS3.webp",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Retro Bowl Cracked",
+      "launch": "games/Retro%20Bowl%20Cracked/RetroBowl-CRACKED-AutoSave1111.html",
+      "cover": "https://cdn.corenexis.com/f/wyRl7Wjh.png",
+      "genre": "Sports"
+    },
+    {
+      "title": "Time Shooter",
+      "launch": "games/Time%20Shooter/timeshooter3.html",
+      "cover": "https://cdn.corenexis.com/f/0hGLgeZL.png",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Block Eat Block",
+      "launch": "games/Block%20Eat%20Block/blockeatblock.html",
+      "cover": "https://cdn.corenexis.com/f/9OgwW6ZP.png",
+      "genre": "Arcade"
+    },
+    {
+      "title": "1v1 Soccer",
+      "launch": "games/1v1%20Soccer/1v1s.html",
+      "cover": "https://cdn.corenexis.com/f/wwYQ2y6D.webp",
+      "genre": "Sports"
+    },
+    {
+      "title": "1v1.LOL",
+      "launch": "games/1v1%20dot%20lol/1v1dotlol.html",
+      "cover": "https://cdn.corenexis.com/f/TFFSh5D0.png",
+      "genre": "Shooter"
+    },
+    {
+      "title": "Angry Birds",
+      "launch": "games/Angry%20Birds/birds.html",
+      "cover": "https://cdn.corenexis.com/f/BswTo6lX.jpg",
+      "genre": "Arcade"
+    },
+    {
+      "title": "2048",
+      "launch": "games/2048/2048.html",
+      "cover": "https://cdn.corenexis.com/f/Nfu2VvkX.png",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Mario vs Luigi",
+      "launch": "games/mariovsluigi/mariovsluigi.html",
+      "cover": "https://cdn.corenexis.com/f/hTUKMU4Z.jpg",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Test",
+      "launch": "games/TEST%20GAME/test_game.html",
+      "cover": "https://img.freepik.com/premium-vector/modern-design-icon-test_362714-3282.jpg?w=2000",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Stick Man Hook",
+      "launch": "games/Stick%20Man%20Hook/SMH.html",
+      "cover": "https://cdn.corenexis.com/f/t8qAGqh5.jpg",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Candy Crush",
+      "launch": "games/Candy%20Crush/candy_crush.html",
+      "cover": "https://cdn.corenexis.com/f/dx28Ir7P.jpg",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Crossy Road",
+      "launch": "games/Crossy%20Road/Crossy_Road.html",
+      "cover": "https://cdn.corenexis.com/f/9gHZ9YF2.png",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Bubble Shooter",
+      "launch": "games/Bubble%20Shooter/Bubbler_Shooter.html",
+      "cover": "https://cdn.corenexis.com/f/U08ZcvH2.jpg",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Basketball Stars",
+      "launch": "games/Basketball%20Stars/basketball_stars.html",
+      "cover": "https://cdn.corenexis.com/f/vWWhP7tp.webp",
+      "genre": "Sports"
+    },
+    {
+      "title": "Drift Boss",
+      "launch": "games/Drift%20Boss/DB.html",
+      "cover": "https://cdn.corenexis.com/f/jx5UUEl6.png",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Granny",
+      "launch": "games/Granny/granny.html",
+      "cover": "https://cdn.corenexis.com/f/0rH6MGVD.jpg",
+      "genre": "Arcade"
+    },
+    {
+      "title": "8 Ball",
+      "launch": "games/8%20Ball/eight_ball.html",
+      "cover": "https://cdn.corenexis.com/f/QS0MOGRb.webp",
+      "genre": "Arcade"
+    },
+    {
+      "title": "Cut the Rope",
+      "launch": "games/Cut%20The%20Rope/CTR/CTR.html",
+      "cover": "https://cdn.corenexis.com/f/oAApVl4U.jpg",
+      "genre": "Arcade"
+    }
+  ]
+}
